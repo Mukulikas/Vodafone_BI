@@ -1,0 +1,303 @@
+select * from((select 
+distinct
+Case when TAB_CASE.ID_NUMBER like 'Q%' then
+substr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),1,instr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),'-',1,2)-1) 
+when TAB_CASE.ID_NUMBER like 'SS%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'BO%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'FER%' 
+then substr(TAB_CASE.ID_NUMBER,4,length(TAB_CASE.ID_NUMBER))
+else tab_case.id_number end as vf_order_ref,
+TAB_CASE.ID_NUMBER as Case_ID,
+SITE_PART.serial_no as Service_reference,
+SITE_PART.instance_name as service_name,
+SITE_PART.X_TYPE as SERVICE_TYPE,
+SITE_PART.X_DELIVERY_METHOD as tail_delivery_method,
+SITE_PART.X_OLO_CODE as Provider,
+TAB_CONTR_ITM.X_CDD as Tail_Provider_Commit_Date,
+TAB_CONTR_ITM.X_EXTERNAL_ORDER_ELEMENT as Third_Party_Order_Ref,
+SITE_PART.X_CEASE_BILL_LIABILITY_DT as Cease_Bill_Liability_Date,
+SITE_PART.X_MIGRATED_DATE as Migrated_Date,
+SITE_PART.X_ACCESS_SPEED as Access_Speed,
+SITE_PART.X_SERVICE_MODEL as Service_Model,
+SITE_PART.X_TERM_POINT as Term_Point,
+SITE_PART.X_TERM_POINT_OFFNET as Offnet,
+SITE_PART.X_HOT_STAGING_FLAG as Hot_Staging_Flag,
+SITE_PART.X_CPE_FLAG as CPE_FLAG,
+TAB_EMPLOYEE.FIRST_NAME||' '||TAB_EMPLOYEE.LAST_NAME as case_owner,
+TABLE_CONDITION.title as Case_Condition,
+ELM.title as Service_status,
+TAB_QUEUE.TITLE as Queue_Title,
+TAB_CASE.CREATION_TIME as Start_Time,
+TAB_CLOSE_CASE.Close_date as expiry_date,
+TAB_SITE.SITE_ID as Site_id,
+TAB_SITE.NAME as BPREM_Ref,
+ADDRESS.ADDRESS as Address,
+ADDRESS.ADDRESS_2 as Address2,
+ADDRESS.X_ADDRESS_3 as Address3,
+ADDRESS.STATE as State,
+ADDRESS.ZIPCODE as Zip_code,
+site_part.part_status,
+SITE_PART.INSTALL_DATE as Install_Date,
+SITE_PART.SERVICE_END_DT As Serv_End_Date,
+TAB_CONTR_ITM.X_ORDER_RAISED as Order_Raised_Date,
+SITE_PART.X_TX_REFERENCE as Circuit_Transmission_Reference,
+SITE_PART.X_SUPPLIER_CODE as Supplier_code,
+Null as Supplier_Account_Name,
+TAB_CONTR_ITM.X_RLD as RLD
+ 
+From 
+ODS_CDC_CLARIFY.O_CLARIFY_TAB_CONTR_ITM TAB_CONTR_ITM,
+ODS_CDC_CLARIFY.O_CLARIFY_TAB_SITE_PART SITE_PART,
+ods_cdc_clarify.O_CLARIFY_TABLE_SITE tab_site,
+(select * from ODS_CDC_CLARIFY.O_CLARIFY_TABLE_SIT_PRT_ROLE where ROLE_NAME='A-END')PRT_ROLE,
+ ODS_CDC_CLARIFY.O_CLARIFY_TABLE_ADDRESS ADDRESS,
+ ods_cdc_clarify.O_CLARIFY_TAB_CASE TAB_CASE,
+ ODS_CDC_CLARIFY.O_CLARIFY_TABLE_CONDITION TABLE_CONDITION,
+ ods_cdc_clarify.O_CLARIFY_TAB_USER TAB_USER,
+ods_cdc_clarify.O_CLARIFY_TAB_EMPLOYEE TAB_EMPLOYEE,
+ods_cdc_clarify.O_CLARIFY_TABLE_GBST_ELM ELM,
+ODS_CDC_CLARIFY.O_CLARIFY_TAB_CLOSE_CASE TAB_CLOSE_CASE,
+ODS_CDC_CLARIFY.o_clarify_table_queue TAB_QUEUE
+
+where TAB_CONTR_ITM.CONTR_ITM2SITE_PART=SITE_PART.OBJID
+ AND SITE_PART.objid = prt_role.prt_role2site_part(+)
+AND PRT_ROLE.PRT_ROLE2SITE=TAB_SITE.OBJID(+)
+AND TAB_SITE.CUST_PRIMADDR2ADDRESS=ADDRESS.OBJID(+)
+AND tab_case.case_prod2site_part=SITE_PART.OBJID
+AND TABLE_CONDITION.OBJID=TAB_CASE.CASE_STATE2CONDITION
+AND TAB_USER.OBJID=TAB_CASE.CASE_OWNER2USER
+AND TAB_USER.OBJID=TAB_EMPLOYEE.EMPLOYEE2USER(+)
+  AND ELM.objid=tab_case.CASESTS2GBST_ELM
+AND  TAB_CLOSE_CASE.LAST_CLOSE2CASE(+)=TAB_CASE.OBJID
+ AND TAB_CASE.CASE_CURRQ2QUEUE=TAB_QUEUE.OBJID(+)
+--AND TAB_CONTR_ITM.CONTR_ITM2CONTR_SCHEDULE=1342604254
+ AND upper(TABLE_CONDITION.title)!='CLOSED'
+
+Union
+
+SELECT distinct
+Case when TAB_CASE.ID_NUMBER like 'Q%' then
+substr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),1,instr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),'-',1,2)-1) 
+when TAB_CASE.ID_NUMBER like 'SS%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'BO%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'FER%' 
+then substr(TAB_CASE.ID_NUMBER,4,length(TAB_CASE.ID_NUMBER))
+else tab_case.id_number end as vf_order_ref,
+	 tab_case.id_number as Case_id,
+    tab_site_part_child.serial_no as Service_reference,
+	tab_SITE_PART_child.instance_name as service_name,
+	 tab_site_part_child.x_type As Service_Type,
+	 tab_site_part_child.x_delivery_method as tail_delivery_method,
+    tab_SITE_PART_child.X_OLO_CODE as Provider,
+TAB_CONTR_ITM_C.X_CDD as Tail_Provider_Commit_Date,
+TAB_CONTR_ITM_C.X_EXTERNAL_ORDER_ELEMENT as Third_Party_Order_Ref,
+tab_site_part_child.x_cease_bill_liability_dt as Cease_Bill_Liability_Date,
+tab_site_part_child.x_migrated_date as Migrated_Date,
+tab_site_part_child.x_access_speed as Access_Speed,
+tab_site_part_child.x_service_model as Service_Model,
+tab_site_part_child.x_term_point as Term_Point,
+tab_site_part_child.x_term_point_offnet as Offnet,
+tab_site_part_child.x_hot_staging_flag as Hot_Staging_Flag,
+tab_site_part_child.x_cpe_flag as CPE_FLAG,
+Null as case_owner,
+TABLE_CONDITION.title as Case_Condition,
+Null as Service_status,
+Null as Queue_Title,
+Null as Start_Time,
+Null as expiry_date,
+Null as Site_id,
+Null as BPREM_Ref,
+Null as Address,
+Null as Address2,
+Null as Address3,
+Null as State,
+Null as Zip_code,
+tab_site_part_child.part_status as Part_Status,
+  TAB_SITE_PART_child.INSTALL_DATE as Circuit_Install_Date,
+    TAB_SITE_PART_child.SERVICE_END_DT as Ciruit_Ser_End_Date,
+    TAB_CONTR_ITM_c.X_ORDER_RAISED as Order_Raised_Date,
+    TAB_SITE_PART_child.X_TX_REFERENCE as Circuit_Transmission_Reference,
+    tab_SITE_PART_child.X_SUPPLIER_CODE as Supplier_code,
+Null as Supplier_Account_Name,
+TAB_CONTR_ITM_C.X_RLD
+  FROM
+    ods_cdc_clarify.O_CLARIFY_TAB_SITE_PART tab_site_part_parent,
+    ods_cdc_clarify.O_CLARIFY_TAB_CASE TAB_CASE,
+    ODS_CDC_CLARIFY.O_CLARIFY_TABLE_CONDITION TABLE_CONDITION,
+    ods_cdc_clarify.O_CLARIFY_TAB_SITE_PART tab_site_part_Child,
+   ods_cdc_clarify.O_CLARIFY_TAB_CONTR_ITM TAB_CONTR_ITM_C,
+  ods_cdc_clarify.O_CLARIFY_TAB_MOD_LEVEL M1,
+( select * from ods_cdc_clarify.O_CLARIFY_TAB_PART_NUM
+where domain ='Circuit') tab_part_num_C
+  WHERE
+  TAB_CONTR_ITM_C.CONTR_ITM2SITE_PART=TAB_SITE_PART_child.OBJID(+)
+  AND tab_site_part_child.site_part2part_info= M1.objid
+  AND m1.part_info2part_num = tab_part_num_c.objid
+   AND TAB_SITE_PART_PARENT.objid =TAB_SITE_PART_CHILD.level2site_part
+  and tab_case.case_prod2site_part=tab_site_part_parent.objid
+  AND TABLE_CONDITION.OBJID=TAB_CASE.CASE_STATE2CONDITION
+  AND upper(TABLE_CONDITION.title)!='CLOSED'
+--and tab_site_part_CHILD.serial_no='VS02-36-2S-D2_1'
+
+
+Union
+
+SELECT distinct
+Case when TAB_CASE.ID_NUMBER like 'Q%' then
+substr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),1,instr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),'-',1,2)-1) 
+when TAB_CASE.ID_NUMBER like 'SS%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'BO%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'FER%' 
+then substr(TAB_CASE.ID_NUMBER,4,length(TAB_CASE.ID_NUMBER))
+else tab_case.id_number end as vf_order_ref,
+	 tab_case.id_number as Case_id,
+    tab_site_part_child.serial_no as Service_reference,
+	tab_SITE_PART_child.instance_name as service_name,
+	 tab_site_part_child.x_type As Service_Type,
+	 tab_site_part_child.x_delivery_method as tail_delivery_method,
+    tab_SITE_PART_child.X_OLO_CODE as Provider,
+Null as Tail_Provider_Commit_Date,
+Null as Third_Party_Order_Ref,
+tab_site_part_child.x_cease_bill_liability_dt as Cease_Bill_Liability_Date,
+tab_site_part_child.x_migrated_date as Migrated_Date,
+tab_site_part_child.x_access_speed as Access_Speed,
+tab_site_part_child.x_service_model as Service_Model,
+tab_site_part_child.x_term_point as Term_Point,
+tab_site_part_child.x_term_point_offnet as Offnet,
+tab_site_part_child.x_hot_staging_flag as Hot_Staging_Flag,
+tab_site_part_child.x_cpe_flag as CPE_FLAG,
+Null as case_owner,
+TABLE_CONDITION.title as Case_Condition,
+Null as Service_status,
+Null as Queue_Title,
+Null as Start_Time,
+Null as expiry_date,
+Null as Site_id,
+Null as BPREM_Ref,
+Null as Address,
+Null as Address2,
+Null as Address3,
+Null as State,
+Null as Zip_code,
+tab_site_part_child.part_status as Part_Status,
+  TAB_SITE_PART_child.INSTALL_DATE as Circuit_Install_Date,
+    TAB_SITE_PART_child.SERVICE_END_DT as Ciruit_Ser_End_Date,
+    TAB_CONTR_ITM_C.x_order_raised as Order_Raised_Date,
+    TAB_SITE_PART_child.X_TX_REFERENCE as Circuit_Transmission_Reference,
+    tab_SITE_PART_child.X_SUPPLIER_CODE as Supplier_code,
+Null as Supplier_Account_Name,
+TAB_CONTR_ITM_C.X_RLD
+  FROM
+    ods_cdc_clarify.O_CLARIFY_TAB_SITE_PART tab_site_part_parent,
+    ods_cdc_clarify.O_CLARIFY_TAB_CASE TAB_CASE,
+    ODS_CDC_CLARIFY.O_CLARIFY_TABLE_CONDITION TABLE_CONDITION,
+    ods_cdc_clarify.O_CLARIFY_TAB_SITE_PART tab_site_part_Child,
+   ( select * from ods_cdc_clarify.O_CLARIFY_TAB_CONTR_ITM  where (contr_itm2site_part,X_ORDER_RAISED) 
+ in (select contr_itm2site_part,max(X_ORDER_RAISED) from ods_cdc_clarify.O_CLARIFY_TAB_CONTR_ITM GROUP BY contr_itm2site_part)) TAB_CONTR_ITM_C,
+  ods_cdc_clarify.O_CLARIFY_TAB_MOD_LEVEL M1,
+( select * from ods_cdc_clarify.O_CLARIFY_TAB_PART_NUM
+where domain ='Component') tab_part_num_C
+  WHERE
+   TAB_CONTR_ITM_C.CONTR_ITM2SITE_PART=TAB_SITE_PART_child.OBJID(+)
+  AND tab_site_part_child.site_part2part_info= M1.objid
+  AND m1.part_info2part_num = tab_part_num_c.objid
+   AND TAB_SITE_PART_PARENT.objid =TAB_SITE_PART_CHILD.level2site_part
+  AND  tab_case.case_prod2site_part=tab_site_part_parent.objid
+  AND TABLE_CONDITION.OBJID=TAB_CASE.CASE_STATE2CONDITION
+  AND upper(TABLE_CONDITION.title)!='CLOSED'
+  and tab_SITE_PART_child.instance_name in ('Customer Premises Equipment','NTE')
+  --and tab_case.id_number ='Q6135231-2-2'
+
+
+union
+
+SELECT distinct
+    Case when TAB_CASE.ID_NUMBER like 'Q%' then
+substr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),1,instr(substr(TAB_CASE.ID_NUMBER,2,length(TAB_CASE.ID_NUMBER)),'-',1,2)-1) 
+when TAB_CASE.ID_NUMBER like 'SS%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'BO%' 
+then substr(TAB_CASE.ID_NUMBER,3,length(TAB_CASE.ID_NUMBER))
+when TAB_CASE.ID_NUMBER like 'FER%' 
+then substr(TAB_CASE.ID_NUMBER,4,length(TAB_CASE.ID_NUMBER))
+else tab_case.id_number end as vf_order_ref,
+TAB_CASE.ID_NUMBER as Case_ID,
+    tab_Tail.serial_no as Service_reference,
+      tab_Tail.instance_name as Item_Name,
+    TAB_tail.X_TYPE as SERVICE_TYPE,
+    tab_tail.x_delivery_method,
+     tab_tail.X_OLO_Code as Tail_Provider,
+  TAB_CONTR_ITM.X_CDD as Tail_Provider_Commit_Date,
+TAB_CONTR_ITM.X_EXTERNAL_ORDER_ELEMENT  as Third_Party_Order_Ref,
+TAB_TAIL.X_CEASE_BILL_LIABILITY_DT as Cease_Bill_Liability_Date,
+TAB_TAIL.X_MIGRATED_DATE as Migrated_Date,
+TAB_TAIL.X_ACCESS_SPEED as Access_Speed,
+TAB_TAIL.X_SERVICE_MODEL as Service_Model,
+TAB_TAIL.X_TERM_POINT as Term_Point,
+TAB_TAIL.X_TERM_POINT_OFFNET as Offnet,
+TAB_TAIL.X_HOT_STAGING_FLAG as Hot_Staging_Flag,
+TAB_TAIL.X_CPE_FLAG as CPE_FLAG,
+Null as case_owner,
+TABLE_CONDITION.title as Case_Condition,
+Null as Service_status,
+Null as Queue_Title,
+Null as Start_Time,
+Null as expiry_date,
+TAB_SITE.site_ID as Site_Id,
+TAB_SITE.NAME as Site_Name,
+Null as Address,
+Null as Address2,
+Null as Address3,
+Null as State,
+Null as Zip_code,
+tab_tail.part_status as Part_Status,
+TAB_TAIL.INSTALL_DATE as Circuit_Install_Date,
+TAB_TAIL.SERVICE_END_DT as Ciruit_Ser_End_Date,
+TAB_CONTR_ITM.X_ORDER_RAISED as Order_Raised_Date,
+TAB_TAIL.X_TX_REFERENCE as Circuit_Transmission_Reference,
+TAB_TAIL.X_SUPPLIER_CODE,
+SUPP.S_SUPPLIER_ACCOUNT_NAME,
+TAB_CONTR_ITM.X_RLD
+from ods_cdc_clarify.o_clarify_tab_site_part tab_service,
+ods_cdc_clarify.o_clarify_tab_site_part tab_tail,
+( select * from ods_cdc_clarify.O_CLARIFY_TAB_CONTR_ITM  where (contr_itm2site_part,X_ORDER_RAISED) 
+ in (select contr_itm2site_part,max(X_ORDER_RAISED) from ods_cdc_clarify.O_CLARIFY_TAB_CONTR_ITM GROUP BY contr_itm2site_part))TAB_CONTR_ITM ,
+ods_cdc_clarify.O_CLARIFY_TAB_MOD_LEVEL M1,
+ ( select * from ods_cdc_clarify.O_CLARIFY_TAB_PART_NUM
+  where domain like 'OLO Tail') part_num,
+(select * from ODS_CDC_CLARIFY.O_CLARIFY_TABLE_SIT_PRT_ROLE where ROLE_NAME='A-END')PRT_ROLE,
+ods_cdc_clarify.O_CLARIFY_TABLE_SITE tab_site,
+   ods_cdc_clarify.O_OLO_X_SUPPLIERS SUPP,
+    ods_cdc_clarify.o_clarify_tab_case tab_case,
+    ODS_CDC_CLARIFY.O_CLARIFY_TABLE_CONDITION TABLE_CONDITION
+   
+where
+tab_service.objid=tab_tail.level2site_part
+AND tab_Tail.site_part2part_info= M1.objid
+AND m1.part_info2part_num =part_num.objid
+AND TAB_SERVICE.objid = prt_role.prt_role2site_part(+)
+AND PRT_ROLE.PRT_ROLE2SITE=TAB_SITE.OBJID(+)
+ AND SUPP.S_Supplier_Code(+)=TAB_TAIL.X_SUPPLIER_CODE
+and tab_case.case_prod2site_part=tab_service.objid
+and TAB_CONTR_ITM.CONTR_ITM2SITE_PART=TAB_TAIL.OBJID
+AND TABLE_CONDITION.OBJID=TAB_CASE.CASE_STATE2CONDITION
+--and tab_service.objid=1613312453
+and tab_tail.x_type like '%Tail%'
+ AND upper(TABLE_CONDITION.title)!='CLOSED'
+-- and TAB_CASE.ID_NUMBER='Q5161202-1-1'
+))
+where case_id='Q6091030-1-1'
+
+
+
+
+
+
+
+  
